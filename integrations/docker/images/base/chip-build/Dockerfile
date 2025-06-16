@@ -1,5 +1,7 @@
 FROM ubuntu:24.04
-LABEL org.opencontainers.image.source https://github.com/project-chip/connectedhomeip
+ARG SOURCE_URL=https://github.com/project-chip/connectedhomeip
+
+LABEL org.opencontainers.image.source ${SOURCE_URL}
 
 VOLUME "/var/source"
 
@@ -34,7 +36,6 @@ RUN set -x \
     automake \
     bison \
     bridge-utils \
-    ccache \
     clang \
     clang-format \
     clang-tidy \
@@ -134,7 +135,7 @@ RUN set -x \
 
 # Install bloat comparison tools
 RUN set -x \
-    && git clone https://github.com/google/bloaty.git \
+    && git clone --jobs 4 https://github.com/google/bloaty.git \
     && mkdir -p bloaty/build \
     && cd bloaty/build \
     && cmake -DCMAKE_BUILD_TYPE=MinSizeRel ../ \
@@ -158,8 +159,10 @@ RUN case ${TARGETPLATFORM} in \
     && export CCACHE_DISABLE=1 PYTHONDONTWRITEBYTECODE=1 \
     && GLIB_VERSION=$(pkg-config --modversion glib-2.0) \
     && git clone --depth=1 --branch=$GLIB_VERSION https://github.com/GNOME/glib.git \
-    && CFLAGS="-O2 -g -fsanitize=thread" meson glib/build glib -Dtests=false \
-    && DESTDIR=../build-image ninja -C glib/build install \
+    && (CFLAGS="-O2 -g -fsanitize=thread" meson glib/build glib -Dtests=false \
+        || cat /glib/build/meson-logs/meson-log.txt) \
+    \
+    && DESTDIR=../build-image ninja -j$(nproc) -C glib/build install \
     && mv glib/build-image/usr/local/lib64/lib* $LD_LIBRARY_PATH_TSAN \
     && rm -rf glib \
     ;; \

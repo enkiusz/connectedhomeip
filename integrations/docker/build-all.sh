@@ -27,13 +27,16 @@ SUB_PATH="*"
 ALL_ARGS=""
 SKIP_BUILT=0
 
+GHCR_IO="ghcr.io"
+ORG=${DOCKER_BUILD_ORG:-project-chip}
+
 for i in "$@"; do
     case $i in
     -h | --help)
        echo "Supported arguments:"
        echo "  -h/--help       This help text"
        echo "  -p/--path       sub-path in integrations/docker/images to build (defaults to * for everything)"
-       echo "  -skip-built     Do not rebuild images already found as built"
+       echo "  --skip-built    Do not rebuild images already found as built"
        exit 0
        ;;
     -p=* | --path=*)
@@ -63,7 +66,7 @@ function build_image() {
     find "$(git rev-parse --show-toplevel)"/integrations/docker/images/$PARSE_PATH -name Dockerfile ! -path "*chip-cert-bins/*" | sort | while read -r dockerfile; do
         # Images are of the form `ghcr.io/project-chip/{name}` and tagged as "${VERSION}"
         DOCKER_PATH=$(dirname $dockerfile) # Drop the file name
-        IMAGE_NAME="ghcr.io/project-chip/${DOCKER_PATH##*/}:${VERSION}"     # Drop directory prefix
+        IMAGE_NAME="$GHCR_IO/$ORG/${DOCKER_PATH##*/}:${VERSION}"     # Drop directory prefix
 
         if [ $SKIP_BUILT -ne 0 ] && docker image inspect "${IMAGE_NAME}" >/dev/null 2>&1; then
           echo "Image ${IMAGE_NAME} already exists. Skipping build"
@@ -71,9 +74,7 @@ function build_image() {
         fi
 
         echo "BUILDING $(dirname "$dockerfile") (i.e. ${IMAGE_NAME})"
-        pushd "$(dirname "$dockerfile")" >/dev/null
-        ./build.sh "$ARGS_TO_PASS"
-        popd >/dev/null
+        "$(dirname "$dockerfile")/build.sh" "$ARGS_TO_PASS"
     done
 }
 

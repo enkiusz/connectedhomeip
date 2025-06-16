@@ -1,6 +1,8 @@
 # This minimal build image is intentionally not based on chip-build
 FROM ubuntu:24.04
-LABEL org.opencontainers.image.source https://github.com/project-chip/connectedhomeip
+ARG SOURCE_URL=https://github.com/project-chip/connectedhomeip
+
+LABEL org.opencontainers.image.source ${SOURCE_URL}
 
 RUN set -x \
     && apt-get update \

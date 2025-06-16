@@ -60,6 +60,15 @@ fi
     exit 0
 }
 
+matter_root() {
+    if VERSION_LINK=$(readlink version); then
+        # Assume all version files are symlinked to integrations/docker/base/chip-build/version
+        echo $(realpath -L "$(dirname '$VERSION_LINK')/../../../../../")
+    fi
+}
+
+MATTER_ROOT=$(matter_root)
+
 die() {
     echo "$me: *** ERROR: $*"
     exit 1
@@ -73,11 +82,21 @@ if [ -f "$DOCKER_VOLUME_PATH" ]; then
     mb_space_before=$(df -m "$DOCKER_VOLUME_PATH" | awk 'FNR==2{print $3}')
 fi
 
-# go find and build any CHIP images this image is "FROM"
-awk -F/ '/^FROM project-chip/ {print $2}' Dockerfile | while read -r dep; do
-    dep=${dep%:*}
-    (cd "../$dep" && ./build.sh "$@")
-done
+if [ -n "$MATTER_ROOT" ]; then
+    awk -F' ' '/# dependency/ {print $2}' Dockerfile | while read -r dep; do
+        echo $dep | (
+            IFS='/' read ghcr_io org image;
+            image_name=${image%:*}
+            echo ghcr_io=$ghcr_io org=$org image=$image image_name=$image_name
+            find "$MATTER_ROOT" -type d -name "$image_name" | while read path; do
+                echo "Build base image in '$path'"
+                (cd "$path" && ./build.sh "$@")
+            done
+        )
+    done
+else
+    echo "Could not obtain Matter SDK root directory, will download base images from $GHCR_ORG"
+fi
 
 BUILD_ARGS=()
 if [[ ${*/--no-cache//} != "${*}" ]]; then
@@ -85,7 +104,10 @@ if [[ ${*/--no-cache//} != "${*}" ]]; then
 fi
 
 [[ ${*/--skip-build//} != "${*}" ]] || {
-    docker build "${BUILD_ARGS[@]}" --build-arg TARGETPLATFORM="$TARGET_PLATFORM_TYPE" --build-arg VERSION="$VERSION" -t "$GHCR_ORG/$ORG/$IMAGE:$VERSION" .
+    docker build "${BUILD_ARGS[@]}" --build-arg TARGETPLATFORM="$TARGET_PLATFORM_TYPE" \
+        --build-arg ORG="$ORG" \
+        --build-arg VERSION="$VERSION" \
+        -t "$GHCR_ORG/$ORG/$IMAGE:$VERSION" .
     docker image prune --force
 }
 

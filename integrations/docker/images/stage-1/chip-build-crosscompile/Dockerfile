@@ -1,6 +1,9 @@
 ARG VERSION=1
-FROM ghcr.io/project-chip/chip-build:${VERSION} as build
-LABEL org.opencontainers.image.source https://github.com/project-chip/connectedhomeip
+ARG BASE_IMAGE_URL=ghcr.io/project-chip
+ARG SOURCE_URL=https://github.com/project-chip/connectedhomeip
+
+FROM ${BASE_IMAGE_URL}/chip-build:${VERSION} as build    # dependency
+LABEL org.opencontainers.image.source ${SOURCE_URL}
 
 RUN set -x \
   && apt-get update \
@@ -27,8 +30,8 @@ RUN set -x \
   && rm -rf /opt/ubuntu-24.04-aarch64-sysroot/lib/modules \
   && : # last line
 
-FROM ghcr.io/project-chip/chip-build:${VERSION}
-LABEL org.opencontainers.image.source https://github.com/project-chip/connectedhomeip
+FROM ${BASE_IMAGE_URL}/chip-build:${VERSION}
+LABEL org.opencontainers.image.source ${SOURCE_URL}
 
 COPY --from=build /opt/ubuntu-24.04-aarch64-sysroot/ /opt/ubuntu-24.04-aarch64-sysroot/
 
