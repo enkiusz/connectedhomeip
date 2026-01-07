@@ -356,6 +356,18 @@ CHIP_ERROR GeneralCommissioningCluster::Attributes(const ConcreteClusterPath & p
 
 void GeneralCommissioningCluster::OnFabricRemoved(const FabricTable & fabricTable, FabricIndex fabricIndex)
 {
+#if CHIP_DEVICE_CONFIG_ENABLE_PAIRING_AUTOSTART
+    if (Server::GetInstance().GetFabricTable().FabricCount() == 0)
+    {
+        ChipLogProgress(Zcl, "No fabrics, restarting commissioning");
+
+        ChipError err = Server::GetInstance().GetCommissioningWindowManager().OpenBasicCommissioningWindow();
+        if (err != CHIP_NO_ERROR)
+        {
+            ChipLogError(Zcl, "Cannot restart pairing: %" CHIP_ERROR_FORMAT, err.Format());
+        }
+    }
+#endif
 #if CHIP_CONFIG_TERMS_AND_CONDITIONS_REQUIRED
     // If the FabricIndex matches the last remaining entry in the Fabrics list, then the device SHALL delete all Matter
     // related data on the node which was created since it was commissioned.
