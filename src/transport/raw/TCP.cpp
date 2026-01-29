@@ -98,6 +98,7 @@ CHIP_ERROR TCPBase::Init(TcpListenParameters & params)
 
     if (params.IsServerListenEnabled())
     {
+        ChipLogDetail(NotSpecified, "ZZXX params.GetInterfaceId().IsPresent() = %d", params.GetInterfaceId().IsPresent());
         err = mListenSocket->Bind(params.GetAddressType(), Inet::IPAddress::Any, params.GetListenPort(),
                                   params.GetInterfaceId().IsPresent());
         SuccessOrExit(err);
