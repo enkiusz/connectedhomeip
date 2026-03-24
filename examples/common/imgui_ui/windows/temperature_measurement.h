@@ -43,15 +43,10 @@ private:
     const chip::EndpointId mEndpointId;
     const std::string mTitle;
 
-    int16_t mTemperatureMeasurementValue;
-    int16_t mTemperatureMeasurementMin;
-    int16_t mTemperatureMeasurementMax;
+    chip::app::DataModel::Nullable<int16_t> mTemperatureMeasurementValue;
+    chip::app::DataModel::Nullable<int16_t> mTemperatureMeasurementMin;
+    chip::app::DataModel::Nullable<int16_t> mTemperatureMeasurementMax;
     uint16_t mTemperatureMeasurementTolerance;
-
-    chip::app::DataModel::Nullable<int16_t> mTargetTemperatureMeasurementValue;
-    chip::app::DataModel::Nullable<int16_t> mTargetTemperatureMeasurementMin;
-    chip::app::DataModel::Nullable<int16_t> mTargetTemperatureMeasurementMax;
-    uint16_t mTargetTemperatureMeasurementTolerance;
 };
 
 } // namespace Windows

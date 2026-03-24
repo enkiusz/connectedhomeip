@@ -19,6 +19,7 @@
 
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <app-common/zap-generated/cluster-enums.h>
+#include <app/clusters/temperature-measurement-server/CodegenIntegration.h>
 
 #include <imgui.h>
 #include <math.h>
@@ -27,18 +28,29 @@ namespace example {
 namespace Ui {
 namespace Windows {
 
+using namespace chip::app::Clusters::TemperatureMeasurement;
+
 void TemperatureMeasurement::UpdateState()
 {
-    UpdateStateNullable(mEndpointId, mTargetTemperatureMeasurementValue, mTemperatureMeasurementValue,
-                        &chip::app::Clusters::TemperatureMeasurement::Attributes::MeasuredValue::Get);
+    auto cluster = FindClusterOnEndpoint(mEndpointId);
+    VerifyOrReturn(cluster != nullptr);
 
-    UpdateStateNullable(mEndpointId, mTargetTemperatureMeasurementMin, mTemperatureMeasurementMin,
-                        &chip::app::Clusters::TemperatureMeasurement::Attributes::MinMeasuredValue::Get);
+    mTemperatureMeasurementValue = cluster->GetMeasuredValue();
+    mTemperatureMeasurementMin   = cluster->GetMinMeasuredValue();
+    mTemperatureMeasurementMax   = cluster->GetMaxMeasuredValue();
 
-    UpdateStateNullable(mEndpointId, mTargetTemperatureMeasurementMax, mTemperatureMeasurementMax,
-                        &chip::app::Clusters::TemperatureMeasurement::Attributes::MaxMeasuredValue::Get);
+    /*
+     UpdateStateNullable(mEndpointId, mTargetTemperatureMeasurementValue, mTemperatureMeasurementValue,
+                         &chip::app::Clusters::TemperatureMeasurement::Attributes::MeasuredValue::Get);
 
-    mTemperatureMeasurementTolerance = mTargetTemperatureMeasurementTolerance;
+        UpdateStateNullable(mEndpointId, mTargetTemperatureMeasurementMin, mTemperatureMeasurementMin,
+                            &chip::app::Clusters::TemperatureMeasurement::Attributes::MinMeasuredValue::Get);
+
+        UpdateStateNullable(mEndpointId, mTargetTemperatureMeasurementMax, mTemperatureMeasurementMax,
+                            &chip::app::Clusters::TemperatureMeasurement::Attributes::MaxMeasuredValue::Get);
+    */
+
+    // mTemperatureMeasurementTolerance = mTargetTemperatureMeasurementTolerance;
 }
 
 void TemperatureMeasurement::Render()
@@ -46,10 +58,15 @@ void TemperatureMeasurement::Render()
     ImGui::Begin(mTitle.c_str());
     ImGui::Text("On Endpoint %d", mEndpointId);
 
+    if (!mTemperatureMeasurementValue.IsNull())
+    {
+        ImGui::LabelText("Temperature Value", "%d", mTemperatureMeasurementValue.Value());
+    }
+    /*
     int16_t temperatureValue = mTemperatureMeasurementValue;
-    int16_t minValue         = mTemperatureMeasurementMin;
-    int16_t maxValue         = mTemperatureMeasurementMax;
-    uint16_t toleranceValue  = mTemperatureMeasurementTolerance;
+    int16_t minValue        = mTemperatureMeasurementMin;
+    int16_t maxValue        = mTemperatureMeasurementMax;
+    uint16_t toleranceValue = mTemperatureMeasurementTolerance;
 
     int uiValue     = temperatureValue;
     int uiMin       = minValue;
@@ -60,6 +77,7 @@ void TemperatureMeasurement::Render()
     ImGui::LabelText("Relative Temperature Min", "%d", uiMin);
     ImGui::LabelText("Relative Temperature Max", "%d", uiMax);
     ImGui::LabelText("Relative Temperature Tolerance", "%d", uiTolerance);
+    */
 
     ImGui::End();
 }
