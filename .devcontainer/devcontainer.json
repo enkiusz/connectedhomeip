@@ -20,7 +20,7 @@
             "type": "bind"
         }
     ],
-    "initializeCommand": "bash .devcontainer/build.sh",
+    "initializeCommand": "bash .devcontainer/build.sh -v 190",
     "image": "matter-dev-environment:local",
     "remoteUser": "vscode",
     "containerEnv": {
