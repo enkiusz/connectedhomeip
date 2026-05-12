@@ -86,6 +86,10 @@ def main(clang: bool, build_dir: str, cross_compile_cpu_type: str | None,
         else:
             raise click.UsageError(f"No sysroot and compiler targets defined for target_cpu '{cross_compile_cpu_type}'")
 
+        # Do not look for programs (like `make`) in the sysroot - we can't execute those on the build host
+        # More information: `man cmake-toolchains.7` and `man cmake-variables.7`
+        cmake_cmd.append("-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER")
+
     # Set compilers for CMake
     cmake_cmd.extend(
         [
